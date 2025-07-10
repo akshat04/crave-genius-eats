@@ -2,11 +2,19 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown, Sparkles, Brain, MapPin } from "lucide-react";
 import heroImage from "@/assets/hero-food.jpg";
 
-export const Hero = () => {
+interface HeroProps {
+  onStartDiscovering?: () => void;
+}
+
+export const Hero = ({ onStartDiscovering }: HeroProps) => {
   const scrollToCraving = () => {
-    document.getElementById('craving-section')?.scrollIntoView({ 
-      behavior: 'smooth' 
-    });
+    if (onStartDiscovering) {
+      onStartDiscovering();
+    } else {
+      document.getElementById('craving-section')?.scrollIntoView({ 
+        behavior: 'smooth' 
+      });
+    }
   };
 
   return (
