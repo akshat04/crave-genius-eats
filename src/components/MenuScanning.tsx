@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Upload, Camera, FileImage, Sparkles, CheckCircle, Clock, Star } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,6 +61,7 @@ export const MenuScanning = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [selectedDishes, setSelectedDishes] = useState<string[]>([]);
+  const [cravings, setCravings] = useState("");
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -83,8 +86,13 @@ export const MenuScanning = () => {
       return;
     }
 
+    if (!cravings.trim()) {
+      toast.error("Please describe what you're craving first");
+      return;
+    }
+
     setIsAnalyzing(true);
-    // Simulate AI analysis
+    // Simulate AI analysis using cravings and menu image
     await new Promise(resolve => setTimeout(resolve, 3000));
     setIsAnalyzing(false);
     setAnalysisComplete(true);
@@ -118,6 +126,25 @@ export const MenuScanning = () => {
         </TabsList>
 
         <TabsContent value="upload" className="space-y-6">
+          {/* Cravings Input */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="cravings" className="text-base font-semibold">What are you craving?</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Describe what you're in the mood for - spicy, creamy, vegetarian, comfort food, etc.
+                </p>
+              </div>
+              <Textarea
+                id="cravings"
+                placeholder="e.g., Something creamy and comforting, spicy curry, fresh salad, chocolate dessert..."
+                value={cravings}
+                onChange={(e) => setCravings(e.target.value)}
+                className="min-h-[100px] resize-none"
+              />
+            </div>
+          </Card>
+
           <Card className="p-8">
             <div className="text-center space-y-4">
               {!uploadedImage ? (
@@ -191,6 +218,25 @@ export const MenuScanning = () => {
         </TabsContent>
 
         <TabsContent value="camera" className="space-y-6">
+          {/* Cravings Input */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="cravings-camera" className="text-base font-semibold">What are you craving?</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Describe what you're in the mood for - spicy, creamy, vegetarian, comfort food, etc.
+                </p>
+              </div>
+              <Textarea
+                id="cravings-camera"
+                placeholder="e.g., Something creamy and comforting, spicy curry, fresh salad, chocolate dessert..."
+                value={cravings}
+                onChange={(e) => setCravings(e.target.value)}
+                className="min-h-[100px] resize-none"
+              />
+            </div>
+          </Card>
+
           <Card className="p-8 text-center">
             <Camera className="w-16 h-16 text-primary/50 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Camera Feature</h3>
