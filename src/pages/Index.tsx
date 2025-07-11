@@ -6,10 +6,14 @@ import { FoodSuggestions } from "@/components/FoodSuggestions";
 import { MenuScanning } from "@/components/MenuScanning";
 import { DeliveryIntegration } from "@/components/DeliveryIntegration";
 import { CravingHistory } from "@/components/CravingHistory";
+import { UserSidebar } from "@/components/UserSidebar";
+import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
 
 const Index = () => {
   const [currentView, setCurrentView] = useState("discover");
   const [showHero, setShowHero] = useState(true);
+  const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
 
   const handleViewChange = (view: string) => {
     setCurrentView(view);
@@ -36,6 +40,9 @@ const Index = () => {
             </section>
             <section className="max-w-6xl mx-auto">
               <FoodSuggestions />
+            </section>
+            <section className="max-w-6xl mx-auto">
+              <DeliveryIntegration />
             </section>
           </div>
         );
@@ -72,7 +79,17 @@ const Index = () => {
       {/* Navigation */}
       {!showHero && (
         <div className="container mx-auto px-6 pt-8 pb-4">
-          <Navigation currentView={currentView} onViewChange={handleViewChange} />
+          <div className="flex items-center justify-between">
+            <Navigation currentView={currentView} onViewChange={handleViewChange} />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsUserSidebarOpen(true)}
+              className="h-9 w-9"
+            >
+              <User className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -96,6 +113,12 @@ const Index = () => {
           </div>
         )}
       </div>
+
+      {/* User Sidebar */}
+      <UserSidebar 
+        isOpen={isUserSidebarOpen} 
+        onClose={() => setIsUserSidebarOpen(false)} 
+      />
     </div>
   );
 };
