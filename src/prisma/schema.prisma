@@ -1,8 +1,0 @@
-model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
-  name           String?
-  oauthProvider  String
-  oauthId        String
-  createdAt      DateTime @default(now())
-}
