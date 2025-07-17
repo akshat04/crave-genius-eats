@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "next-themes";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -29,9 +30,9 @@ interface UserSidebarProps {
 }
 
 export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
-  const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   const menuItems = [
     {
@@ -148,7 +149,7 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {darkMode ? (
+                  {theme === 'dark' ? (
                     <Moon className="h-5 w-5 text-muted-foreground" />
                   ) : (
                     <Sun className="h-5 w-5 text-muted-foreground" />
@@ -159,8 +160,8 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
                   </div>
                 </div>
                 <Switch
-                  checked={darkMode}
-                  onCheckedChange={setDarkMode}
+                  checked={theme === 'dark'}
+                  onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
                 />
               </div>
             </Card>
