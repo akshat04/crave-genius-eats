@@ -11,14 +11,17 @@ import {
   Shield, 
   HelpCircle,
   ChevronRight,
-  X
+  X,
+  LogIn
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -28,6 +31,7 @@ interface UserSidebarProps {
 export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const { user, signOut } = useAuth();
 
   const menuItems = [
     {
@@ -105,19 +109,37 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
             </div>
             
             {/* User Profile */}
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <h3 className="font-medium">John Doe</h3>
-                <p className="text-sm text-muted-foreground">john@example.com</p>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={user.user_metadata?.avatar_url} />
+                  <AvatarFallback>
+                    {user.email?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="font-medium">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                </div>
+                <Badge variant="secondary" className="text-xs">
+                  Free
+                </Badge>
               </div>
-              <Badge variant="secondary" className="text-xs">
-                Pro
-              </Badge>
-            </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Sign in to access your account
+                </p>
+                <Link to="/auth" onClick={onClose}>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Content */}
@@ -187,16 +209,18 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => console.log("Sign out")}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
+          {user && (
+            <div className="p-6 border-t">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={signOut}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </>

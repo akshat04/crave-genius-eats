@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { ArrowDown, Sparkles, Brain, MapPin } from "lucide-react";
+import { ArrowDown, Sparkles, Brain, MapPin, LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-food.jpg";
 
 interface HeroProps {
@@ -59,15 +60,28 @@ export const Hero = ({ onStartDiscovering }: HeroProps) => {
         </div>
 
         <div className="space-y-4">
-          <Button 
-            onClick={scrollToCraving}
-            variant="hero" 
-            size="lg"
-            className="text-lg px-8 py-4 h-auto animate-glow"
-          >
-            <Sparkles className="w-5 h-5" />
-            Start Discovering Food
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button 
+              onClick={scrollToCraving}
+              variant="hero" 
+              size="lg"
+              className="text-lg px-8 py-4 h-auto animate-glow"
+            >
+              <Sparkles className="w-5 h-5" />
+              Start Discovering Food
+            </Button>
+            
+            <Link to="/auth">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="text-lg px-8 py-4 h-auto bg-white/10 hover:bg-white/20 text-white border-white/30"
+              >
+                <LogIn className="w-5 h-5" />
+                Sign In
+              </Button>
+            </Link>
+          </div>
           
           <div className="flex justify-center">
             <Button 
