@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Upload, Camera, FileImage, Sparkles, CheckCircle, Clock, Star } from "lucide-react";
+import { Upload, Camera, FileImage, Sparkles, CheckCircle, X, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MenuDish {
-  id: string;
   name: string;
   description: string;
   price: string;
@@ -18,50 +18,29 @@ interface MenuDish {
   reasons: string[];
   dietary: string[];
   spiceLevel?: number;
+  estimatedPosition?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }
 
-const mockMenuAnalysis: MenuDish[] = [
-  {
-    id: "1",
-    name: "Butter Chicken",
-    description: "Creamy tomato-based curry with tender chicken pieces",
-    price: "$16.99",
-    category: "Main Course",
-    matchScore: 95,
-    reasons: ["Perfect for your creamy craving", "Comfort food vibes", "Rich and satisfying"],
-    dietary: ["Gluten-Free"],
-    spiceLevel: 2
-  },
-  {
-    id: "2", 
-    name: "Paneer Tikka Masala",
-    description: "Grilled cottage cheese in spiced tomato gravy",
-    price: "$14.99",
-    category: "Vegetarian",
-    matchScore: 88,
-    reasons: ["Vegetarian option", "Creamy texture you're craving", "Aromatic spices"],
-    dietary: ["Vegetarian", "Gluten-Free"],
-    spiceLevel: 3
-  },
-  {
-    id: "3",
-    name: "Mango Kulfi",
-    description: "Traditional Indian ice cream with cardamom",
-    price: "$6.99", 
-    category: "Dessert",
-    matchScore: 75,
-    reasons: ["Sweet ending", "Creamy and cold", "Unique flavors"],
-    dietary: ["Vegetarian"],
-    spiceLevel: 0
-  }
-];
+interface MenuAnalysisResult {
+  recommendations: MenuDish[];
+  summary: string;
+}
 
 export const MenuScanning = () => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<MenuAnalysisResult | null>(null);
   const [selectedDishes, setSelectedDishes] = useState<string[]>([]);
   const [cravings, setCravings] = useState("");
+  const [isCameraMode, setIsCameraMode] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -74,9 +53,55 @@ export const MenuScanning = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setUploadedImage(e.target?.result as string);
+        setAnalysisResult(null);
         toast.success("Menu uploaded successfully!");
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' } // Use back camera if available
+      });
+      setStream(mediaStream);
+      setIsCameraMode(true);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast.error('Unable to access camera. Please check permissions.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsCameraMode(false);
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      if (context) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0);
+        
+        const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        setUploadedImage(imageDataUrl);
+        setAnalysisResult(null);
+        stopCamera();
+        toast.success("Photo captured successfully!");
+      }
     }
   };
 
@@ -92,24 +117,54 @@ export const MenuScanning = () => {
     }
 
     setIsAnalyzing(true);
-    // Simulate AI analysis using cravings and menu image
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    setIsAnalyzing(false);
-    setAnalysisComplete(true);
-    toast.success("Menu analysis complete! Found perfect matches for your cravings.");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-menu', {
+        body: {
+          imageBase64: uploadedImage,
+          cravings: cravings.trim()
+        }
+      });
+
+      if (error) {
+        console.error('Error calling analyze-menu function:', error);
+        toast.error('Failed to analyze menu. Please try again.');
+        return;
+      }
+
+      if (data.success) {
+        setAnalysisResult(data.analysis);
+        toast.success('Menu analysis complete! Found perfect matches for your cravings.');
+      } else {
+        toast.error(data.error || 'Failed to analyze menu');
+      }
+    } catch (error) {
+      console.error('Error analyzing menu:', error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const toggleDishSelection = (dishId: string) => {
+  const toggleDishSelection = (dishName: string) => {
     setSelectedDishes(prev => 
-      prev.includes(dishId) 
-        ? prev.filter(id => id !== dishId)
-        : [...prev, dishId]
+      prev.includes(dishName) 
+        ? prev.filter(name => name !== dishName)
+        : [...prev, dishName]
     );
   };
 
   const getSpiceIndicator = (level?: number) => {
     if (!level) return null;
     return "🌶️".repeat(level);
+  };
+
+  const resetAnalysis = () => {
+    setUploadedImage(null);
+    setAnalysisResult(null);
+    setSelectedDishes([]);
+    setCravings("");
+    stopCamera();
   };
 
   return (
@@ -152,7 +207,7 @@ export const MenuScanning = () => {
                   <div className="border-2 border-dashed border-primary/30 rounded-lg p-12 hover:border-primary/50 transition-colors">
                     <FileImage className="w-16 h-16 text-primary/50 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Drop your menu here</h3>
-                    <p className="text-muted-foreground mb-6">Supports JPG, PNG, PDF files up to 10MB</p>
+                    <p className="text-muted-foreground mb-6">Supports JPG, PNG files up to 10MB</p>
                     
                     <label className="cursor-pointer">
                       <Button variant="hero" className="pointer-events-none">
@@ -161,7 +216,7 @@ export const MenuScanning = () => {
                       </Button>
                       <input
                         type="file"
-                        accept="image/*,.pdf"
+                        accept="image/*"
                         onChange={handleFileUpload}
                         className="hidden"
                       />
@@ -180,17 +235,13 @@ export const MenuScanning = () => {
                       variant="outline"
                       size="sm"
                       className="absolute top-2 right-2"
-                      onClick={() => {
-                        setUploadedImage(null);
-                        setAnalysisComplete(false);
-                        setSelectedDishes([]);
-                      }}
+                      onClick={resetAnalysis}
                     >
-                      Change
+                      <X className="w-4 h-4" />
                     </Button>
                   </div>
                   
-                  {!analysisComplete && (
+                  {!analysisResult && (
                     <Button 
                       onClick={analyzeMenu}
                       disabled={isAnalyzing}
@@ -237,36 +288,107 @@ export const MenuScanning = () => {
             </div>
           </Card>
 
-          <Card className="p-8 text-center">
-            <Camera className="w-16 h-16 text-primary/50 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Camera Feature</h3>
-            <p className="text-muted-foreground mb-6">Take a photo of the menu directly</p>
-            <Button variant="hero" disabled>
-              <Camera className="w-4 h-4" />
-              Open Camera (Coming Soon)
-            </Button>
+          <Card className="p-8">
+            <div className="text-center space-y-4">
+              {!isCameraMode && !uploadedImage ? (
+                <>
+                  <Camera className="w-16 h-16 text-primary/50 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Camera Feature</h3>
+                  <p className="text-muted-foreground mb-6">Take a photo of the menu directly</p>
+                  <Button variant="hero" onClick={startCamera}>
+                    <Camera className="w-4 h-4" />
+                    Open Camera
+                  </Button>
+                </>
+              ) : isCameraMode ? (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full max-w-md mx-auto rounded-lg"
+                    />
+                    <canvas ref={canvasRef} className="hidden" />
+                  </div>
+                  <div className="flex gap-4 justify-center">
+                    <Button variant="hero" onClick={captureImage}>
+                      <Camera className="w-4 h-4" />
+                      Capture
+                    </Button>
+                    <Button variant="outline" onClick={stopCamera}>
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <img 
+                      src={uploadedImage} 
+                      alt="Captured menu"
+                      className="max-w-full h-64 object-contain mx-auto rounded-lg shadow-card"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={resetAnalysis}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {!analysisResult && (
+                    <Button 
+                      onClick={analyzeMenu}
+                      disabled={isAnalyzing}
+                      variant="hero"
+                      size="lg"
+                      className="w-full max-w-md mx-auto"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Sparkles className="w-4 h-4 animate-spin" />
+                          Analyzing Menu with AI...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Analyze Menu
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
 
       {/* Analysis Results */}
-      {analysisComplete && (
+      {analysisResult && (
         <div className="space-y-6">
-          <div className="flex items-center gap-2 text-center justify-center">
-            <CheckCircle className="w-6 h-6 text-accent" />
-            <h3 className="text-xl font-semibold">Menu Analysis Complete!</h3>
+          <div className="text-center">
+            <div className="flex items-center gap-2 justify-center mb-2">
+              <CheckCircle className="w-6 h-6 text-accent" />
+              <h3 className="text-xl font-semibold">Menu Analysis Complete!</h3>
+            </div>
+            <p className="text-muted-foreground">{analysisResult.summary}</p>
           </div>
 
           <div className="grid gap-4">
-            {mockMenuAnalysis.map((dish) => (
+            {analysisResult.recommendations.map((dish, index) => (
               <Card 
-                key={dish.id} 
+                key={`${dish.name}-${index}`}
                 className={`p-6 cursor-pointer transition-all duration-300 ${
-                  selectedDishes.includes(dish.id) 
+                  selectedDishes.includes(dish.name) 
                     ? 'ring-2 ring-primary shadow-primary' 
                     : 'hover:shadow-card'
                 }`}
-                onClick={() => toggleDishSelection(dish.id)}
+                onClick={() => toggleDishSelection(dish.name)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 space-y-3">
@@ -292,8 +414,8 @@ export const MenuScanning = () => {
                     <div className="space-y-2">
                       <p className="font-medium text-sm text-primary">Why this matches your craving:</p>
                       <div className="flex flex-wrap gap-2">
-                        {dish.reasons.map((reason, index) => (
-                          <span key={index} className="text-sm bg-primary/5 text-primary px-2 py-1 rounded">
+                        {dish.reasons.map((reason, reasonIndex) => (
+                          <span key={reasonIndex} className="text-sm bg-primary/5 text-primary px-2 py-1 rounded">
                             ✨ {reason}
                           </span>
                         ))}
@@ -303,7 +425,7 @@ export const MenuScanning = () => {
                   
                   <div className="text-right">
                     <p className="text-xl font-bold text-primary">{dish.price}</p>
-                    {selectedDishes.includes(dish.id) && (
+                    {selectedDishes.includes(dish.name) && (
                       <CheckCircle className="w-6 h-6 text-accent mt-2" />
                     )}
                   </div>
