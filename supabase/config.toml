@@ -1,1 +1,4 @@
 project_id = "dqgoeplmilswiymuplev"
+
+[functions.analyze-craving]
+verify_jwt = false

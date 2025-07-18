@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Send, Utensils, Heart, Zap } from "lucide-react";
+import { Sparkles, Send, Utensils, Heart, Zap, ChefHat } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const dietaryOptions = [
   "Vegan", "Vegetarian", "Keto", "Gluten-Free", "Dairy-Free", 
@@ -21,6 +23,7 @@ export const CravingInput = () => {
   const [craving, setCraving] = useState("");
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
 
   const handleDietaryToggle = (option: string) => {
     setSelectedDietary(prev => 
@@ -38,9 +41,34 @@ export const CravingInput = () => {
     if (!craving.trim()) return;
     
     setIsAnalyzing(true);
-    // Simulate AI processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsAnalyzing(false);
+    setAiResponse(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-craving', {
+        body: {
+          craving: craving.trim(),
+          dietaryPreferences: selectedDietary
+        }
+      });
+
+      if (error) {
+        console.error('Error calling analyze-craving function:', error);
+        toast.error('Failed to analyze your craving. Please try again.');
+        return;
+      }
+
+      if (data.success) {
+        setAiResponse(data.analysis);
+        toast.success('Perfect match found!');
+      } else {
+        toast.error(data.error || 'Failed to analyze your craving');
+      }
+    } catch (error) {
+      console.error('Error analyzing craving:', error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -123,6 +151,25 @@ export const CravingInput = () => {
           ))}
         </div>
       </Card>
+
+      {/* AI Response */}
+      {aiResponse && (
+        <Card className="p-6 shadow-card border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+          <div className="flex items-start gap-3">
+            <div className="bg-primary rounded-full p-2 mt-1">
+              <ChefHat className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold mb-3 text-primary">AI Food Expert Says:</h4>
+              <div className="prose prose-sm max-w-none">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {aiResponse}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };
