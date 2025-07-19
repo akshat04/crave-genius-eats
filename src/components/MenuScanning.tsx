@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Upload, Camera, FileImage, Sparkles, CheckCircle, X, Eye } from "lucide-react";
+import { Upload, Camera, FileImage, Sparkles, CheckCircle, X, Eye, ThumbsUp, ThumbsDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,6 +39,8 @@ export const MenuScanning = () => {
   const [cravings, setCravings] = useState("");
   const [isCameraMode, setIsCameraMode] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -164,7 +166,48 @@ export const MenuScanning = () => {
     setAnalysisResult(null);
     setSelectedDishes([]);
     setCravings("");
+    setFeedbackGiven(false);
+    setIsRegenerating(false);
     stopCamera();
+  };
+
+  const handleSatisfied = () => {
+    setFeedbackGiven(true);
+    toast.success("Great! Enjoy your meal!");
+  };
+
+  const handleNotSatisfied = async () => {
+    if (!uploadedImage || !cravings.trim()) return;
+    
+    setIsRegenerating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-menu', {
+        body: {
+          imageBase64: uploadedImage,
+          cravings: cravings.trim() + " (please provide different recommendations than before)"
+        }
+      });
+
+      if (error) {
+        console.error('Error regenerating recommendations:', error);
+        toast.error('Failed to generate new recommendations. Please try again.');
+        return;
+      }
+
+      if (data.success) {
+        setAnalysisResult(data.analysis);
+        setSelectedDishes([]);
+        toast.success('Found new recommendations for you!');
+      } else {
+        toast.error(data.error || 'Failed to generate new recommendations');
+      }
+    } catch (error) {
+      console.error('Error regenerating recommendations:', error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   return (
@@ -433,6 +476,58 @@ export const MenuScanning = () => {
               </Card>
             ))}
           </div>
+
+          {/* Feedback Section */}
+          {!feedbackGiven && (
+            <Card className="p-6 bg-gradient-subtle border-primary/20">
+              <div className="text-center space-y-4">
+                <h4 className="text-lg font-semibold">Are you satisfied with these recommendations?</h4>
+                <p className="text-muted-foreground">
+                  Let us know if these dishes match what you're craving, or if you'd like to see more options.
+                </p>
+                <div className="flex gap-4 justify-center">
+                  <Button 
+                    variant="hero" 
+                    onClick={handleSatisfied}
+                    className="flex items-center gap-2"
+                  >
+                    <ThumbsUp className="w-4 h-4" />
+                    Yes, these look perfect!
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleNotSatisfied}
+                    disabled={isRegenerating}
+                    className="flex items-center gap-2"
+                  >
+                    {isRegenerating ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Finding more options...
+                      </>
+                    ) : (
+                      <>
+                        <ThumbsDown className="w-4 h-4" />
+                        Show me more options
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {feedbackGiven && (
+            <Card className="p-6 bg-accent/10 border-accent/20">
+              <div className="text-center">
+                <CheckCircle className="w-8 h-8 text-accent mx-auto mb-2" />
+                <h4 className="font-semibold text-accent">Perfect! Enjoy your meal!</h4>
+                <p className="text-muted-foreground mt-1">
+                  We're glad we could help you find something delicious.
+                </p>
+              </div>
+            </Card>
+          )}
 
           {selectedDishes.length > 0 && (
             <Card className="p-6 bg-primary/5 border-primary/20">
