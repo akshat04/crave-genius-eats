@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Sparkles, Brain, MapPin, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-food.jpg";
 
 interface HeroProps {
@@ -8,6 +9,8 @@ interface HeroProps {
 }
 
 export const Hero = ({ onStartDiscovering }: HeroProps) => {
+  const { user } = useAuth();
+  
   const scrollToCraving = () => {
     if (onStartDiscovering) {
       onStartDiscovering();
@@ -71,16 +74,18 @@ export const Hero = ({ onStartDiscovering }: HeroProps) => {
               Start Discovering Food
             </Button>
             
-            <Link to="/auth">
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="text-lg px-8 py-4 h-auto bg-white/10 hover:bg-white/20 text-white border-white/30"
-              >
-                <LogIn className="w-5 h-5" />
-                Sign In
-              </Button>
-            </Link>
+            {!user && (
+              <Link to="/auth">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="text-lg px-8 py-4 h-auto bg-white/10 hover:bg-white/20 text-white border-white/30"
+                >
+                  <LogIn className="w-5 h-5" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
           
           <div className="flex justify-center">

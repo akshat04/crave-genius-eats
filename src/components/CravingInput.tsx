@@ -3,13 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Send, Utensils, Heart, Zap, ChefHat } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Sparkles, Send, Utensils, Heart, Zap, ChefHat, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const dietaryOptions = [
   "Vegan", "Vegetarian", "Keto", "Gluten-Free", "Dairy-Free", 
   "Paleo", "Low-Carb", "Halal", "Kosher", "Nut-Free"
+];
+
+const nationalityOptions = [
+  "American", "Italian", "Chinese", "Japanese", "Indian", "Mexican", "French", "Thai", 
+  "Greek", "Lebanese", "Korean", "Vietnamese", "Spanish", "Turkish", "British", 
+  "German", "Brazilian", "Moroccan", "Ethiopian", "Peruvian", "Other"
 ];
 
 const moodCravings = [
@@ -22,6 +30,7 @@ const moodCravings = [
 export const CravingInput = () => {
   const [craving, setCraving] = useState("");
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
+  const [nationality, setNationality] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
 
@@ -44,10 +53,13 @@ export const CravingInput = () => {
     setAiResponse(null);
     
     try {
+      const cravingText = `${craving.trim()}${nationality ? ` (I prefer ${nationality} cuisine)` : ''}`;
+      
       const { data, error } = await supabase.functions.invoke('analyze-craving', {
         body: {
-          craving: craving.trim(),
-          dietaryPreferences: selectedDietary
+          craving: cravingText,
+          dietaryPreferences: selectedDietary,
+          nationality: nationality || null
         }
       });
 
@@ -125,6 +137,27 @@ export const CravingInput = () => {
               </>
             )}
           </Button>
+        </div>
+      </Card>
+
+      {/* Cuisine Preference */}
+      <Card className="p-6 shadow-card border-primary/10">
+        <h4 className="font-semibold mb-4 flex items-center gap-2">
+          <Globe className="w-4 h-4 text-primary" />
+          Cuisine Preference
+        </h4>
+        <div className="space-y-2">
+          <Label htmlFor="nationality">What type of cuisine do you prefer?</Label>
+          <Select value={nationality} onValueChange={setNationality}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your preferred cuisine (optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              {nationalityOptions.map((option) => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </Card>
 

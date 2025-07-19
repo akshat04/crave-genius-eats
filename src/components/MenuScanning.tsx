@@ -210,7 +210,7 @@ export const MenuScanning = () => {
                     <p className="text-muted-foreground mb-6">Supports JPG, PNG files up to 10MB</p>
                     
                     <label className="cursor-pointer">
-                      <Button variant="hero" className="pointer-events-none">
+                      <Button variant="hero" className="cursor-pointer">
                         <Upload className="w-4 h-4" />
                         Choose File
                       </Button>

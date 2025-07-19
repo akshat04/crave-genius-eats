@@ -31,6 +31,73 @@ serve(async (req) => {
       throw new Error('Please describe what you are craving');
     }
 
+    // First, check if the image is actually a menu
+    const menuValidationPrompt = `You are a food expert. Look at this image and determine if it's actually a restaurant menu or food menu. 
+
+Consider these factors:
+- Does it show food items with names and prices?
+- Is it formatted like a restaurant menu?
+- Does it have menu sections (appetizers, mains, desserts, etc.)?
+- Are there dish descriptions?
+
+Respond with a simple JSON: {"isMenu": true/false, "reason": "brief explanation"}
+
+If it's clearly not a menu (like a random photo, landscape, person, etc.), return false.`;
+
+    const validationResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: menuValidationPrompt },
+          { 
+            role: 'user', 
+            content: [
+              { type: 'text', text: 'Is this image a menu?' },
+              { 
+                type: 'image_url', 
+                image_url: { 
+                  url: imageBase64,
+                  detail: 'low'
+                }
+              }
+            ]
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 100,
+      }),
+    });
+
+    if (!validationResponse.ok) {
+      console.error('Menu validation failed, proceeding anyway');
+    } else {
+      const validationData = await validationResponse.json();
+      const validationText = validationData.choices[0].message.content;
+      
+      try {
+        const validation = JSON.parse(validationText);
+        if (!validation.isMenu) {
+          return new Response(
+            JSON.stringify({ 
+              error: "Please upload a menu. The uploaded image doesn't appear to be a restaurant menu.",
+              success: false 
+            }), 
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+      } catch (e) {
+        console.log('Validation parsing failed, proceeding anyway');
+      }
+    }
+
     const systemPrompt = `You are a food expert analyzing a menu image. Based on the user's cravings and the menu items visible in the image, identify which dishes would best match their desires.
 
 Your response should be a JSON object with the following structure:
