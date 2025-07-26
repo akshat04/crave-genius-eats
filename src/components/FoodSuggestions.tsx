@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Star, ExternalLink, ChefHat, ThumbsUp, ThumbsDown, RefreshCw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FoodSuggestion {
   id: string;
@@ -65,11 +66,23 @@ export const FoodSuggestions = () => {
 
   const handleNotSatisfied = () => {
     setIsRegenerating(true);
-    // Simulate regenerating recommendations
+    
+    // Scroll back to craving input section to re-run analysis
     setTimeout(() => {
+      const cravingSection = document.getElementById('craving-section');
+      if (cravingSection) {
+        cravingSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Trigger the "Find My Perfect Match" button click
+        const findButton = cravingSection.querySelector('button[type="submit"], button:has(svg)');
+        if (findButton && findButton.textContent?.includes('Find My Perfect Match')) {
+          (findButton as HTMLButtonElement).click();
+        }
+      }
+      
       setIsRegenerating(false);
-      toast.success("Found new recommendations for you!");
-    }, 2000);
+      toast.success("Scroll up to adjust your craving and find new recommendations!");
+    }, 1000);
   };
 
   return (
