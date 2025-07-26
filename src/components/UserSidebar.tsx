@@ -24,16 +24,22 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
 
+// Props for UserSidebar component
 interface UserSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+// UserSidebar component displays user info, settings, and menu actions
 export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
+  // State for notifications toggle
   const [notifications, setNotifications] = useState(true);
+  // Get user and signOut from auth context
   const { user, signOut } = useAuth();
+  // Get theme and setTheme from theme context
   const { theme, setTheme } = useTheme();
 
+  // Sidebar menu items and their actions
   const menuItems = [
     {
       icon: User,
@@ -80,7 +86,7 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay for closing sidebar */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/20 z-40"
@@ -88,14 +94,14 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
         />
       )}
       
-      {/* Sidebar */}
+      {/* Sidebar panel */}
       <div className={`
         fixed top-0 right-0 h-full w-80 bg-background border-l shadow-lg z-50 
         transform transition-transform duration-300 ease-out
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
-          {/* Header */}
+          {/* Header section with user info or sign in */}
           <div className="p-6 border-b">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold">Account</h2>
@@ -108,8 +114,7 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            
-            {/* User Profile */}
+            {/* Show user profile if signed in, else sign in prompt */}
             {user ? (
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
@@ -143,9 +148,9 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
             )}
           </div>
 
-          {/* Content */}
+          {/* Sidebar content: theme toggle and menu items */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Theme Toggle */}
+            {/* Theme toggle card */}
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -168,7 +173,7 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
 
             <Separator />
 
-            {/* Menu Items */}
+            {/* Menu items list */}
             <div className="space-y-2">
               {menuItems.map((item, index) => (
                 <Card 
@@ -182,6 +187,7 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <p className="font-medium">{item.label}</p>
+                          {/* Show badge if present (e.g. Pro) */}
                           {item.badge && (
                             <Badge variant="outline" className="text-xs">
                               {item.badge}
@@ -193,7 +199,7 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
                         </p>
                       </div>
                     </div>
-                    
+                    {/* Show toggle switch if item has toggle, else chevron */}
                     {item.toggle ? (
                       <Switch
                         checked={item.toggle.checked}
@@ -209,7 +215,7 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Footer: sign out button if user is signed in */}
           {user && (
             <div className="p-6 border-t">
               <Button 

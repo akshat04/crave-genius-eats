@@ -1,3 +1,7 @@
+// CravingHistory component displays the user's craving journey including history, favorites, and analytics.
+// It uses mock data to simulate craving entries and favorite foods.
+// The component features a calendar to select dates, tabs to switch between views, and cards to display stats and details.
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +22,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
+// Interface representing a single craving entry
 interface CravingEntry {
   id: string;
   date: Date;
@@ -31,6 +36,7 @@ interface CravingEntry {
   location?: string;
 }
 
+// Interface representing a favorite food item
 interface FavoriteFood {
   id: string;
   name: string;
@@ -43,6 +49,7 @@ interface FavoriteFood {
   tags: string[];
 }
 
+// Mock data for craving history entries
 const mockCravingHistory: CravingEntry[] = [
   {
     id: "1",
@@ -80,6 +87,7 @@ const mockCravingHistory: CravingEntry[] = [
   }
 ];
 
+// Mock data for favorite foods
 const mockFavorites: FavoriteFood[] = [
   {
     id: "1",
@@ -117,15 +125,19 @@ const mockFavorites: FavoriteFood[] = [
 ];
 
 export const CravingHistory = () => {
+  // State to track the currently selected date on the calendar
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  // State to track the currently selected craving entry
   const [selectedEntry, setSelectedEntry] = useState<string | null>(null);
 
+  // Returns cravings for the selected date
   const getCravingsByDate = (date: Date) => {
     return mockCravingHistory.filter(entry => 
       entry.date.toDateString() === date.toDateString()
     );
   };
 
+  // Returns the top 3 popular cuisines from the craving history
   const getPopularCuisines = () => {
     const cuisineCount = mockCravingHistory.reduce((acc, entry) => {
       acc[entry.cuisine] = (acc[entry.cuisine] || 0) + 1;
@@ -137,11 +149,13 @@ export const CravingHistory = () => {
       .slice(0, 3);
   };
 
+  // Calculates the average rating from the craving history
   const getAverageRating = () => {
     const total = mockCravingHistory.reduce((sum, entry) => sum + entry.rating, 0);
     return (total / mockCravingHistory.length).toFixed(1);
   };
 
+  // Renders star icons based on the rating value
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star 
@@ -153,12 +167,13 @@ export const CravingHistory = () => {
 
   return (
     <div className="space-y-8">
+      {/* Header Section */}
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">Your Craving Journey</h2>
         <p className="text-muted-foreground">Track your food discoveries and get smarter recommendations</p>
       </div>
 
-      {/* Stats Overview */}
+      {/* Stats Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4 text-center">
           <Clock className="w-8 h-8 text-primary mx-auto mb-2" />
@@ -182,6 +197,7 @@ export const CravingHistory = () => {
         </Card>
       </div>
 
+      {/* Tabs for History, Favorites, and Analytics */}
       <Tabs defaultValue="history" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="history">Craving History</TabsTrigger>
@@ -189,9 +205,10 @@ export const CravingHistory = () => {
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
+        {/* Craving History Tab Content */}
         <TabsContent value="history" className="space-y-6">
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Calendar */}
+            {/* Calendar Component */}
             <Card className="p-6">
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5" />
@@ -215,7 +232,7 @@ export const CravingHistory = () => {
               />
             </Card>
 
-            {/* History List */}
+            {/* Craving History List */}
             <div className="lg:col-span-2 space-y-4">
               <h3 className="font-semibold">
                 {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "All Cravings"}
@@ -290,6 +307,7 @@ export const CravingHistory = () => {
           </div>
         </TabsContent>
 
+        {/* Favorites Tab Content */}
         <TabsContent value="favorites" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {mockFavorites.map((favorite) => (
@@ -353,6 +371,7 @@ export const CravingHistory = () => {
           </div>
         </TabsContent>
 
+        {/* Analytics Tab Content */}
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Popular Cuisines */}

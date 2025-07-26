@@ -1,22 +1,26 @@
-// src/components/SearchHistory.tsx
+// SearchHistory component displays user's previous search queries and results
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { addSearch, clearSearchHistory } from '../actions/searchActions';
 
-interface SearchHistoryProps {
-  // Add any props needed for the component
+  // Props for SearchHistory (currently unused)
 }
 
+// Main SearchHistory component
 const SearchHistory: React.FC<SearchHistoryProps> = () => {
+  // Get search history from Redux store
   const searchHistory = useSelector((state) => state.searchHistory);
 
+  // Clear search history handler
   const handleClearSearchHistory = () => {
     clearSearchHistory();
   };
 
   return (
     <div>
+      {/* Title */}
       <h2>Search History</h2>
+      {/* List of previous searches */}
       <ul>
         {searchHistory.map((search, index) => (
           <li key={index}>
@@ -26,6 +30,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = () => {
           </li>
         ))}
       </ul>
+      {/* Button to clear search history */}
       <button onClick={handleClearSearchHistory}>Clear Search History</button>
     </div>
   );

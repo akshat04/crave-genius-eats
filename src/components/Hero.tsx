@@ -1,16 +1,21 @@
+// UI components and icons
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Sparkles, Brain, MapPin, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-food.jpg";
 
+// Props for Hero component
 interface HeroProps {
   onStartDiscovering?: () => void;
 }
 
+// Hero component displays the landing section with background, highlights, and actions
 export const Hero = ({ onStartDiscovering }: HeroProps) => {
+  // Get current user from auth context
   const { user } = useAuth();
   
+  // Scroll to craving section or call custom handler
   const scrollToCraving = () => {
     if (onStartDiscovering) {
       onStartDiscovering();
@@ -31,15 +36,16 @@ export const Hero = ({ onStartDiscovering }: HeroProps) => {
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
       </div>
 
-      {/* Content */}
+      {/* Main content: title, subtitle, highlights, actions */}
       <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+        {/* Logo and title */}
         <div className="flex items-center justify-center mb-6">
           <Sparkles className="w-8 h-8 text-primary-glow mr-3 animate-bounce-gentle" />
           <h1 className="text-6xl md:text-7xl font-bold text-white">
             Crave<span className="text-primary-glow">AI</span>
           </h1>
         </div>
-        
+        {/* Subtitle */}
         <h2 className="text-xl md:text-2xl text-white/90 mb-8 font-light leading-relaxed">
           Never wonder "what should I eat?" again. Describe your craving,
           <br className="hidden md:block" />
@@ -62,6 +68,7 @@ export const Hero = ({ onStartDiscovering }: HeroProps) => {
           </div>
         </div>
 
+        {/* Action buttons: discover food, sign in, explore below */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
@@ -73,7 +80,7 @@ export const Hero = ({ onStartDiscovering }: HeroProps) => {
               <Sparkles className="w-5 h-5" />
               Start Discovering Food
             </Button>
-            
+            {/* Show sign in button if user is not logged in */}
             {!user && (
               <Link to="/auth">
                 <Button 
@@ -87,7 +94,7 @@ export const Hero = ({ onStartDiscovering }: HeroProps) => {
               </Link>
             )}
           </div>
-          
+          {/* Explore below button */}
           <div className="flex justify-center">
             <Button 
               onClick={scrollToCraving}
@@ -102,7 +109,7 @@ export const Hero = ({ onStartDiscovering }: HeroProps) => {
         </div>
       </div>
 
-      {/* Floating food particles effect */}
+      {/* Floating food particles effect for visual flair */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-primary-glow rounded-full opacity-60 animate-bounce-gentle" style={{ animationDelay: '0s' }} />
         <div className="absolute top-1/3 right-1/4 w-1.5 h-1.5 bg-accent rounded-full opacity-40 animate-bounce-gentle" style={{ animationDelay: '1s' }} />

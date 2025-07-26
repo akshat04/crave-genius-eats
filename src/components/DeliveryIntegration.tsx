@@ -1,3 +1,4 @@
+// React and UI imports
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ExternalLink, MapPin, Clock, Star, Truck, CreditCard, Check } from "lucide-react";
 
+// Type definition for delivery app
 interface DeliveryApp {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ interface DeliveryApp {
   available: boolean;
 }
 
+// List of supported delivery apps and their details
 const deliveryApps: DeliveryApp[] = [
   {
     id: "zomato",
@@ -62,6 +65,7 @@ const deliveryApps: DeliveryApp[] = [
   }
 ];
 
+// Type definition for restaurant
 interface Restaurant {
   id: string;
   name: string;
@@ -75,6 +79,7 @@ interface Restaurant {
   specialOffer?: string;
 }
 
+// List of nearby restaurants and their details
 const nearbyRestaurants: Restaurant[] = [
   {
     id: "1",
@@ -112,10 +117,13 @@ const nearbyRestaurants: Restaurant[] = [
   }
 ];
 
+// Main DeliveryIntegration component
 export const DeliveryIntegration = () => {
+  // State for connected apps and selected restaurant
   const [apps, setApps] = useState(deliveryApps);
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(null);
 
+  // Toggle connection status for a delivery app
   const toggleConnection = (appId: string) => {
     setApps(prev => prev.map(app => 
       app.id === appId 
@@ -124,11 +132,13 @@ export const DeliveryIntegration = () => {
     ));
   };
 
+  // Get logo for a delivery app by id
   const getAppLogo = (appId: string) => {
     const app = apps.find(a => a.id === appId);
     return app?.logo || "🍽️";
   };
 
+  // Check if a delivery app is connected
   const isAppConnected = (appId: string) => {
     const app = apps.find(a => a.id === appId);
     return app?.connected || false;
@@ -136,12 +146,13 @@ export const DeliveryIntegration = () => {
 
   return (
     <div className="space-y-8">
+      {/* Header section */}
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">Delivery Integration</h2>
         <p className="text-muted-foreground">Connect your favorite delivery apps for seamless ordering</p>
       </div>
 
-      {/* Delivery Apps Management */}
+      {/* Delivery Apps Management: show and manage connected apps */}
       <div className="space-y-6">
         <h3 className="text-xl font-semibold">Connected Apps</h3>
         <div className="grid gap-4 md:grid-cols-2">
@@ -164,7 +175,7 @@ export const DeliveryIntegration = () => {
                     </div>
                   </div>
                 </div>
-                
+                {/* Toggle connection and show availability */}
                 <div className="flex items-center gap-3">
                   {!app.available && (
                     <Badge variant="secondary">Not Available</Badge>
@@ -176,7 +187,7 @@ export const DeliveryIntegration = () => {
                   />
                 </div>
               </div>
-              
+              {/* Show special offer if connected */}
               {app.specialOffer && app.connected && (
                 <div className="mt-4 p-3 bg-accent/10 rounded-lg border border-accent/20">
                   <p className="text-sm text-accent font-medium">
@@ -184,7 +195,7 @@ export const DeliveryIntegration = () => {
                   </p>
                 </div>
               )}
-              
+              {/* Show connection status */}
               {app.connected && (
                 <div className="mt-4 flex items-center gap-2 text-sm text-accent">
                   <Check className="w-4 h-4" />
@@ -196,7 +207,7 @@ export const DeliveryIntegration = () => {
         </div>
       </div>
 
-      {/* Available Restaurants */}
+      {/* Available Restaurants: show restaurants and order options */}
       <div className="space-y-6">
         <h3 className="text-xl font-semibold">Available Restaurants</h3>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -211,6 +222,7 @@ export const DeliveryIntegration = () => {
               )}
             >
               <div className="relative">
+                {/* Restaurant image and rating */}
                 <img 
                   src={restaurant.image} 
                   alt={restaurant.name}
@@ -222,6 +234,7 @@ export const DeliveryIntegration = () => {
                     {restaurant.rating}
                   </Badge>
                 </div>
+                {/* Show available delivery apps for restaurant */}
                 <div className="absolute bottom-3 left-3 flex gap-1">
                   {restaurant.availableOn.map(appId => (
                     <div 
@@ -237,11 +250,13 @@ export const DeliveryIntegration = () => {
               </div>
 
               <div className="p-5 space-y-3">
+                {/* Restaurant name and cuisine */}
                 <div>
                   <h4 className="font-semibold text-lg">{restaurant.name}</h4>
                   <p className="text-muted-foreground">{restaurant.cuisine}</p>
                 </div>
 
+                {/* Delivery details */}
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
@@ -257,6 +272,7 @@ export const DeliveryIntegration = () => {
                   </div>
                 </div>
 
+                {/* Special offer for restaurant */}
                 {restaurant.specialOffer && (
                   <div className="bg-primary/5 rounded-lg p-2 border border-primary/10">
                     <p className="text-sm text-primary font-medium">
@@ -265,6 +281,7 @@ export const DeliveryIntegration = () => {
                   </div>
                 )}
 
+                {/* Order buttons for each connected app */}
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Order through:</p>
                   <div className="flex gap-2">
@@ -287,6 +304,7 @@ export const DeliveryIntegration = () => {
                   </div>
                 </div>
 
+                {/* Show order button if restaurant is selected */}
                 {selectedRestaurant === restaurant.id && (
                   <Button variant="hero" className="w-full mt-4">
                     <ExternalLink className="w-4 h-4" />
@@ -299,7 +317,7 @@ export const DeliveryIntegration = () => {
         </div>
       </div>
 
-      {/* Connection Status */}
+      {/* Connection Status: summary of integration */}
       <Card className="p-6 bg-primary/5 border-primary/20">
         <div className="text-center space-y-4">
           <h3 className="text-lg font-semibold">Integration Status</h3>

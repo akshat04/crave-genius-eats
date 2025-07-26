@@ -1,12 +1,15 @@
+// UI components and icons
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Camera, History, Truck, Menu } from "lucide-react";
 
+// Props for Navigation component
 interface NavigationProps {
   currentView: string;
   onViewChange: (view: string) => void;
 }
 
+// Navigation items for different app views
 const navigationItems = [
   {
     id: "discover",
@@ -34,12 +37,14 @@ const navigationItems = [
   }
 ];
 
+// Navigation component for switching between app views
 export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
+  // State for mobile menu open/close
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <>
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Button (visible on small screens) */}
       <div className="md:hidden fixed top-4 left-4 z-50">
         <Button
           variant="outline"
@@ -51,7 +56,7 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
         </Button>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay (closes menu when clicked) */}
       {isMenuOpen && (
         <div 
           className="md:hidden fixed inset-0 bg-black/50 z-40"
@@ -59,7 +64,7 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
         />
       )}
 
-      {/* Navigation */}
+      {/* Main navigation bar */}
       <nav className={`
         fixed top-4 left-1/2 transform -translate-x-1/2 z-40
         md:relative md:top-0 md:left-0 md:transform-none
@@ -70,7 +75,7 @@ export const Navigation = ({ currentView, onViewChange }: NavigationProps) => {
             {navigationItems.map((item) => {
               const IconComponent = item.icon;
               const isActive = currentView === item.id;
-              
+              // Render navigation button for each item
               return (
                 <Button
                   key={item.id}

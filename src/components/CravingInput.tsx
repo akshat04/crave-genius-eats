@@ -1,3 +1,4 @@
+// React and UI imports
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,17 +10,20 @@ import { Sparkles, Send, Utensils, Heart, Zap, ChefHat, Globe } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// List of dietary preference options
 const dietaryOptions = [
   "Vegan", "Vegetarian", "Keto", "Gluten-Free", "Dairy-Free", 
   "Paleo", "Low-Carb", "Halal", "Kosher", "Nut-Free"
 ];
 
+// List of cuisine/nationality options
 const nationalityOptions = [
   "American", "Italian", "Chinese", "Japanese", "Indian", "Mexican", "French", "Thai", 
   "Greek", "Lebanese", "Korean", "Vietnamese", "Spanish", "Turkish", "British", 
   "German", "Brazilian", "Moroccan", "Ethiopian", "Peruvian", "Other"
 ];
 
+// Quick mood craving options with icons
 const moodCravings = [
   { icon: Heart, text: "Comfort Food", color: "warm" },
   { icon: Zap, text: "Something Spicy", color: "fresh" },
@@ -27,13 +31,16 @@ const moodCravings = [
   { icon: Utensils, text: "Rich & Creamy", color: "warm" }
 ];
 
+// Main CravingInput component
 export const CravingInput = () => {
+  // State for user input and selections
   const [craving, setCraving] = useState("");
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
   const [nationality, setNationality] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
 
+  // Toggle dietary preference selection
   const handleDietaryToggle = (option: string) => {
     setSelectedDietary(prev => 
       prev.includes(option) 
@@ -42,19 +49,24 @@ export const CravingInput = () => {
     );
   };
 
+  // Set craving text from quick mood button
   const handleQuickCraving = (text: string) => {
     setCraving(text);
   };
 
+  // Analyze craving by calling Supabase Edge Function
   const analyzeCraving = async () => {
+    // Prevent empty input
     if (!craving.trim()) return;
     
     setIsAnalyzing(true);
-    setAiResponse(null);
+    setAiResponse(null); // Reset previous response
     
     try {
+      // Combine craving and nationality for analysis
       const cravingText = `${craving.trim()}${nationality ? ` (I prefer ${nationality} cuisine)` : ''}`;
       
+      // Call Supabase Edge Function for AI analysis
       const { data, error } = await supabase.functions.invoke('analyze-craving', {
         body: {
           craving: cravingText,
@@ -63,12 +75,14 @@ export const CravingInput = () => {
         }
       });
 
+      // Handle API error
       if (error) {
         console.error('Error calling analyze-craving function:', error);
         toast.error('Failed to analyze your craving. Please try again.');
         return;
       }
 
+      // Handle successful or failed analysis
       if (data.success) {
         setAiResponse(data.analysis);
         toast.success('Perfect match found!');
@@ -76,6 +90,7 @@ export const CravingInput = () => {
         toast.error(data.error || 'Failed to analyze your craving');
       }
     } catch (error) {
+      // Catch unexpected errors
       console.error('Error analyzing craving:', error);
       toast.error('Something went wrong. Please try again.');
     } finally {
@@ -85,7 +100,7 @@ export const CravingInput = () => {
 
   return (
     <div className="space-y-6">
-      {/* Quick Mood Buttons */}
+      {/* Quick Mood Buttons: lets user quickly select a craving mood */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {moodCravings.map((mood) => {
           const IconComponent = mood.icon;
@@ -103,21 +118,21 @@ export const CravingInput = () => {
         })}
       </div>
 
-      {/* Main Craving Input */}
+      {/* Main Craving Input: user describes their craving */}
       <Card className="p-6 shadow-card border-primary/10">
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">What are you craving?</h3>
           </div>
-          
+          {/* Textarea for craving description */}
           <Textarea
             placeholder="Describe your craving... 'I want something spicy and warming' or 'Craving something creamy and cold' or just 'pizza'"
             value={craving}
             onChange={(e) => setCraving(e.target.value)}
             className="min-h-24 resize-none border-primary/20 focus:border-primary"
           />
-          
+          {/* Button to trigger AI analysis */}
           <Button 
             onClick={analyzeCraving}
             disabled={!craving.trim() || isAnalyzing}
@@ -140,7 +155,7 @@ export const CravingInput = () => {
         </div>
       </Card>
 
-      {/* Cuisine Preference */}
+      {/* Cuisine Preference: user selects preferred cuisine */}
       <Card className="p-6 shadow-card border-primary/10">
         <h4 className="font-semibold mb-4 flex items-center gap-2">
           <Globe className="w-4 h-4 text-primary" />
@@ -161,7 +176,7 @@ export const CravingInput = () => {
         </div>
       </Card>
 
-      {/* Dietary Preferences */}
+      {/* Dietary Preferences: user selects dietary restrictions */}
       <Card className="p-6 shadow-card border-primary/10">
         <h4 className="font-semibold mb-4 flex items-center gap-2">
           <Utensils className="w-4 h-4 text-primary" />
@@ -185,7 +200,7 @@ export const CravingInput = () => {
         </div>
       </Card>
 
-      {/* AI Response */}
+      {/* AI Response: shows result from AI analysis */}
       {aiResponse && (
         <Card className="p-6 shadow-card border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
           <div className="flex items-start gap-3">

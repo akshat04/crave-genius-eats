@@ -1,8 +1,10 @@
+// UI components and icons
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Star, ExternalLink, ChefHat } from "lucide-react";
 
+// Type definition for a food suggestion (restaurant or recipe)
 interface FoodSuggestion {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ interface FoodSuggestion {
   matchReason: string;
 }
 
+// Mock data for food suggestions
 const mockSuggestions: FoodSuggestion[] = [
   {
     id: "1",
@@ -52,17 +55,21 @@ const mockSuggestions: FoodSuggestion[] = [
   }
 ];
 
+// FoodSuggestions component displays a list of matched food options (restaurants or recipes)
 export const FoodSuggestions = () => {
   return (
     <div className="space-y-6">
+      {/* Header section */}
       <div className="text-center">
         <h2 className="text-3xl font-bold mb-2">Perfect Matches for You</h2>
         <p className="text-muted-foreground">Here are some options that match your craving</p>
       </div>
 
+      {/* Suggestions grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {mockSuggestions.map((suggestion) => (
           <Card key={suggestion.id} className="overflow-hidden hover:shadow-warm transition-all duration-300 group hover:scale-102">
+            {/* Image and type badge */}
             <div className="relative">
               <img 
                 src={suggestion.image} 
@@ -81,6 +88,7 @@ export const FoodSuggestions = () => {
                   )}
                 </Badge>
               </div>
+              {/* Show rating badge if available */}
               {suggestion.rating && (
                 <div className="absolute top-3 right-3">
                   <Badge className="bg-white/90 text-foreground">
@@ -91,7 +99,9 @@ export const FoodSuggestions = () => {
               )}
             </div>
 
+            {/* Card content: name, description, details, match reason, action button */}
             <div className="p-5 space-y-4">
+              {/* Name and description */}
               <div>
                 <h3 className="font-semibold text-lg mb-1">{suggestion.name}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
@@ -99,6 +109,7 @@ export const FoodSuggestions = () => {
                 </p>
               </div>
 
+              {/* Details badges: cuisine, distance, prep time, price */}
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline" className="text-xs">
                   {suggestion.cuisine}
@@ -122,12 +133,14 @@ export const FoodSuggestions = () => {
                 )}
               </div>
 
+              {/* Reason for match */}
               <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
                 <p className="text-sm text-primary font-medium">
                   ✨ {suggestion.matchReason}
                 </p>
               </div>
 
+              {/* Action button: order or view recipe */}
               <Button 
                 variant={suggestion.type === "restaurant" ? "warm" : "fresh"} 
                 className="w-full"
