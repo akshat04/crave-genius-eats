@@ -22,7 +22,6 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "next-themes";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -32,7 +31,6 @@ interface UserSidebarProps {
 export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
   const [notifications, setNotifications] = useState(true);
   const { user, signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
 
   const menuItems = [
     {
@@ -145,29 +143,6 @@ export const UserSidebar = ({ isOpen, onClose }: UserSidebarProps) => {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Theme Toggle */}
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {theme === 'dark' ? (
-                    <Moon className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <Sun className="h-5 w-5 text-muted-foreground" />
-                  )}
-                  <div>
-                    <p className="font-medium">Dark Mode</p>
-                    <p className="text-sm text-muted-foreground">Toggle theme</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={theme === 'dark'}
-                  onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-                />
-              </div>
-            </Card>
-
-            <Separator />
-
             {/* Menu Items */}
             <div className="space-y-2">
               {menuItems.map((item, index) => (
