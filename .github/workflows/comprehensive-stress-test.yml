@@ -1,0 +1,78 @@
+name: Comprehensive Stress Testing Suite
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sundays
+  workflow_dispatch:
+    inputs:
+      test_duration:
+        description: 'Test duration in seconds'
+        required: false
+        default: '300'
+      concurrent_users:
+        description: 'Number of concurrent users'
+        required: false
+        default: '50'
+
+jobs:
+  comprehensive-stress-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Install testing tools
+      run: |
+        npm install -g artillery k6
+        sudo apt-get update
+        sudo apt-get install -y apache2-utils  # For ab (Apache Bench)
+    
+    - name: Create comprehensive test configuration
+      run: |
+        cat > comprehensive-stress-config.yml << 'EOF'
+        config:
+          target: 'https://httpbin.org'
+          phases:
+            - duration: ${{ github.event.inputs.test_duration || '300' }}
+              arrivalRate: 5
+              rampTo: ${{ github.event.inputs.concurrent_users || '50' }}
+        scenarios:
+          - name: 'Multi-endpoint stress test'
+            weight: 70
+            requests:
+              - get:
+                  url: '/json'
+              - get:
+                  url: '/delay/1'
+              - post:
+                  url: '/post'
+                  json:
+                    test: 'data'
+          - name: 'Heavy load scenario'
+            weight: 30
+            requests:
+              - get:
+                  url: '/bytes/1024'
+        EOF
+    
+    - name: Run comprehensive stress test
+      run: |
+        echo "Starting comprehensive stress test..."
+        artillery run comprehensive-stress-config.yml --output stress-report.json
+    
+    - name: Generate HTML report
+      run: |
+        artillery report stress-report.json --output stress-report.html
+    
+    - name: Upload comprehensive test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: comprehensive-stress-results
+        path: |
+          stress-report.json
+          stress-report.html

@@ -1,0 +1,57 @@
+name: API Stress Testing
+
+on:
+  push:
+    branches: [ main, github-actions-stress-testing ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * 1'  # Run weekly on Mondays at 2 AM
+
+jobs:
+  api-stress-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install stress testing tools
+      run: |
+        npm install -g artillery
+        npm install -g k6
+    
+    - name: Start application
+      run: |
+        npm start &
+        sleep 30  # Wait for app to start
+    
+    - name: Run Artillery stress test
+      run: |
+        echo "config:
+          target: 'http://localhost:3000'
+          phases:
+            - duration: 60
+              arrivalRate: 10
+        scenarios:
+          - name: 'Homepage load test'
+            requests:
+              - get:
+                  url: '/'" > artillery-config.yml
+        artillery run artillery-config.yml
+    
+    - name: Run basic load test
+      run: |
+        for i in {1..100}; do
+          curl -s http://localhost:3000 > /dev/null &
+        done
+        wait
+        echo "Basic load test completed"
