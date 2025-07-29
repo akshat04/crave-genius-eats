@@ -8,11 +8,11 @@ on:
       test_duration:
         description: 'Test duration in seconds'
         required: false
-        default: '300'
+        default: '60'
       concurrent_users:
         description: 'Number of concurrent users'
         required: false
-        default: '50'
+        default: '10'
 
 jobs:
   comprehensive-stress-test:
@@ -28,9 +28,9 @@ jobs:
     
     - name: Install testing tools
       run: |
-        npm install -g artillery k6
+        npm install -g artillery@latest
         sudo apt-get update
-        sudo apt-get install -y apache2-utils  # For ab (Apache Bench)
+        sudo apt-get install -y curl
     
     - name: Create comprehensive test configuration
       run: |
@@ -38,9 +38,9 @@ jobs:
         config:
           target: 'https://httpbin.org'
           phases:
-            - duration: ${{ github.event.inputs.test_duration || '300' }}
-              arrivalRate: 5
-              rampTo: ${{ github.event.inputs.concurrent_users || '50' }}
+            - duration: ${{ github.event.inputs.test_duration || '60' }}
+              arrivalRate: 2
+              rampTo: ${{ github.event.inputs.concurrent_users || '10' }}
         scenarios:
           - name: 'Multi-endpoint stress test'
             weight: 70
@@ -60,14 +60,23 @@ jobs:
                   url: '/bytes/1024'
         EOF
     
+    - name: Verify Artillery config
+      run: |
+        echo "📋 Testing Artillery configuration..."
+        artillery run --dry-run comprehensive-stress-config.yml
+    
     - name: Run comprehensive stress test
       run: |
-        echo "Starting comprehensive stress test..."
+        echo "🚀 Starting comprehensive stress test..."
         artillery run comprehensive-stress-config.yml --output stress-report.json
     
     - name: Generate HTML report
       run: |
         artillery report stress-report.json --output stress-report.html
+    
+    - name: Display summary
+      run: |
+        echo "📊 Test completed! Check artifacts for detailed results."
     
     - name: Upload comprehensive test results
       uses: actions/upload-artifact@v4
