@@ -67,12 +67,18 @@ export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
   const getImageForDish = (dishName: string): string => {
     const lowerName = dishName.toLowerCase();
     
-    // Map dishes to appropriate Unsplash images
-    if (lowerName.includes('curry')) {
+    // Map dishes to appropriate Unsplash images with better matching
+    if (lowerName.includes('risotto')) {
+      return "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('curry')) {
       return "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop";
-    } else if (lowerName.includes('chicken') || lowerName.includes('butter')) {
+    } else if (lowerName.includes('chicken') || lowerName.includes('butter chicken')) {
       return "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop";
-    } else if (lowerName.includes('noodles') || lowerName.includes('ramen') || lowerName.includes('pasta')) {
+    } else if (lowerName.includes('shepherd') || lowerName.includes('pie') || lowerName.includes('potato')) {
+      return "https://images.unsplash.com/photo-1574484284002-952d92456975?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('mac') || lowerName.includes('cheese') || lowerName.includes('pasta')) {
+      return "https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('noodles') || lowerName.includes('ramen')) {
       return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop";
     } else if (lowerName.includes('pizza')) {
       return "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop";
@@ -86,6 +92,8 @@ export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
       return "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop";
     } else if (lowerName.includes('taco')) {
       return "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('stir fry') || lowerName.includes('stirfry')) {
+      return "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=300&fit=crop";
     } else {
       // Default food images
       const defaultImages = [
@@ -97,20 +105,25 @@ export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
     }
   };
 
+  const cleanDescription = (description: string): string => {
+    // Remove markdown formatting like ** and other unwanted characters
+    return description.replace(/\*\*/g, '').replace(/\*/g, '').trim();
+  };
+
   const generateSuggestions = (): FoodSuggestion[] => {
     if (analysis?.recommendations && analysis.recommendations.length > 0) {
       return analysis.recommendations.map((rec, index) => ({
         id: `ai-${index}`,
         name: rec.name,
-        description: rec.description,
+        description: cleanDescription(rec.description),
         image: getImageForDish(rec.name),
         type: rec.type,
         cuisine: rec.cuisine,
-        rating: rec.type === "restaurant" ? (4.2 + Math.random() * 0.6) : undefined,
+        rating: rec.type === "restaurant" ? parseFloat((4.2 + Math.random() * 0.6).toFixed(2)) : undefined,
         prepTime: rec.type === "recipe" ? `${15 + Math.floor(Math.random() * 45)} min` : undefined,
         distance: rec.type === "restaurant" ? `${(0.3 + Math.random() * 2).toFixed(1)} mi` : undefined,
         price: rec.type === "restaurant" ? (Math.random() > 0.5 ? "$$" : "$$$") : undefined,
-        matchReason: rec.matchReason
+        matchReason: cleanDescription(rec.matchReason)
       }));
     }
     
