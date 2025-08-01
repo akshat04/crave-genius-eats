@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Hero } from "@/components/Hero";
 import { Navigation } from "@/components/Navigation";
-import { CravingInput } from "@/components/CravingInput";
+import { CravingInput, CravingAnalysis } from "@/components/CravingInput";
 import { FoodSuggestions } from "@/components/FoodSuggestions";
 import { MenuScanning } from "@/components/MenuScanning";
 import { DeliveryIntegration } from "@/components/DeliveryIntegration";
@@ -14,6 +14,7 @@ const Index = () => {
   const [currentView, setCurrentView] = useState("discover");
   const [showHero, setShowHero] = useState(true);
   const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
+  const [cravingAnalysis, setCravingAnalysis] = useState<CravingAnalysis | undefined>();
 
   const handleViewChange = (view: string) => {
     setCurrentView(view);
@@ -36,10 +37,10 @@ const Index = () => {
         return (
           <div className="space-y-16">
             <section id="craving-section" className="max-w-4xl mx-auto">
-              <CravingInput />
+              <CravingInput onAnalysisComplete={setCravingAnalysis} />
             </section>
             <section className="max-w-6xl mx-auto">
-              <FoodSuggestions />
+              <FoodSuggestions analysis={cravingAnalysis} />
             </section>
             <section className="max-w-6xl mx-auto">
               <DeliveryIntegration />

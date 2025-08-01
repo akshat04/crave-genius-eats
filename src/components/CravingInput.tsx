@@ -9,6 +9,17 @@ import { Sparkles, Send, Utensils, Heart, Zap, ChefHat, Globe } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export interface CravingAnalysis {
+  analysis: string;
+  recommendations?: {
+    name: string;
+    description: string;
+    cuisine: string;
+    type: "restaurant" | "recipe";
+    matchReason: string;
+  }[];
+}
+
 const dietaryOptions = [
   "Vegan", "Vegetarian", "Keto", "Gluten-Free", "Dairy-Free", 
   "Paleo", "Low-Carb", "Halal", "Kosher", "Nut-Free"
@@ -27,7 +38,11 @@ const moodCravings = [
   { icon: Utensils, text: "Rich & Creamy", color: "warm" }
 ];
 
-export const CravingInput = () => {
+interface CravingInputProps {
+  onAnalysisComplete?: (analysis: CravingAnalysis) => void;
+}
+
+export const CravingInput = ({ onAnalysisComplete }: CravingInputProps) => {
   const [craving, setCraving] = useState("");
   const [selectedDietary, setSelectedDietary] = useState<string[]>([]);
   const [nationality, setNationality] = useState("");
@@ -71,6 +86,11 @@ export const CravingInput = () => {
 
       if (data.success) {
         setAiResponse(data.analysis);
+        const analysisData: CravingAnalysis = {
+          analysis: data.analysis,
+          recommendations: parseRecommendations(data.analysis)
+        };
+        onAnalysisComplete?.(analysisData);
         toast.success('Perfect match found!');
       } else {
         toast.error(data.error || 'Failed to analyze your craving');
@@ -82,6 +102,94 @@ export const CravingInput = () => {
       setIsAnalyzing(false);
     }
   };
+
+  const parseRecommendations = (analysis: string) => {
+    // Simple parsing to extract dish names from the AI response
+    // This is a basic implementation - in a real app you'd want more sophisticated parsing
+    const dishes: { name: string; description: string; cuisine: string; type: "restaurant" | "recipe"; matchReason: string; }[] = [];
+    
+    // Common food-related keywords to help identify dishes
+    const lines = analysis.split('\n');
+    const dishNames: string[] = [];
+    
+    // Look for numbered items or dishes mentioned
+    lines.forEach(line => {
+      // Look for patterns like "1. Dish Name" or "- Dish Name"
+      const numbered = line.match(/^\d+\.\s*([^-:]+)/);
+      const bulleted = line.match(/^-\s*([^-:]+)/);
+      const colonSeparated = line.match(/\*\*([^*]+)\*\*/);
+      
+      if (numbered) dishNames.push(numbered[1].trim());
+      else if (bulleted) dishNames.push(bulleted[1].trim());
+      else if (colonSeparated) dishNames.push(colonSeparated[1].trim());
+    });
+    
+    // If no structured format found, extract likely dish names
+    if (dishNames.length === 0) {
+      const commonDishes = [
+        'curry', 'chicken', 'pasta', 'soup', 'noodles', 'rice', 'pizza', 'sandwich', 
+        'salad', 'stir fry', 'tacos', 'burger', 'ramen', 'pho', 'biryani', 'risotto'
+      ];
+      
+      commonDishes.forEach(dish => {
+        if (analysis.toLowerCase().includes(dish)) {
+          const context = analysis.match(new RegExp(`[^.]*${dish}[^.]*`, 'i'));
+          if (context) {
+            dishNames.push(context[0].trim());
+          }
+        }
+      });
+    }
+    
+    // Create dish objects with limited data we can extract
+    const uniqueNames = [...new Set(dishNames)].slice(0, 3);
+    uniqueNames.forEach((name, index) => {
+      dishes.push({
+        name: name.replace(/[^\w\s]/g, '').trim(),
+        description: `Delicious ${name.toLowerCase()} that matches your craving perfectly`,
+        cuisine: nationality || getCuisineFromDish(name),
+        type: Math.random() > 0.5 ? "restaurant" : "recipe",
+        matchReason: `Perfect for your ${craving.toLowerCase()} craving`
+      });
+    });
+    
+    return dishes.length > 0 ? dishes : getDefaultRecommendations();
+  };
+
+  const getCuisineFromDish = (dish: string): string => {
+    const lowerDish = dish.toLowerCase();
+    if (lowerDish.includes('curry') || lowerDish.includes('biryani')) return 'Indian';
+    if (lowerDish.includes('pasta') || lowerDish.includes('pizza')) return 'Italian';
+    if (lowerDish.includes('ramen') || lowerDish.includes('sushi')) return 'Japanese';
+    if (lowerDish.includes('taco') || lowerDish.includes('burrito')) return 'Mexican';
+    if (lowerDish.includes('pho') || lowerDish.includes('banh')) return 'Vietnamese';
+    if (lowerDish.includes('pad thai') || lowerDish.includes('tom yum')) return 'Thai';
+    return 'International';
+  };
+
+  const getDefaultRecommendations = () => [
+    {
+      name: "Spicy Thai Red Curry",
+      description: "Rich coconut curry with fresh vegetables and aromatic spices",
+      cuisine: "Thai",
+      type: "restaurant" as const,
+      matchReason: "Perfect for your spicy and warming craving"
+    },
+    {
+      name: "Homemade Butter Chicken",
+      description: "Creamy tomato-based curry that's comforting and rich",
+      cuisine: "Indian", 
+      type: "recipe" as const,
+      matchReason: "Matches your comfort food mood perfectly"
+    },
+    {
+      name: "Korean Fire Noodles",
+      description: "Instant noodles with gochujang and fresh vegetables",
+      cuisine: "Korean",
+      type: "recipe" as const,
+      matchReason: "Quick spicy fix for your craving"
+    }
+  ];
 
   return (
     <div className="space-y-6">

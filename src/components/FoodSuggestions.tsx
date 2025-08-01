@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Star, ExternalLink, ChefHat, ThumbsUp, ThumbsDown, RefreshCw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { CravingAnalysis } from "./CravingInput";
 
 interface FoodSuggestion {
   id: string;
@@ -18,6 +19,10 @@ interface FoodSuggestion {
   distance?: string;
   price?: string;
   matchReason: string;
+}
+
+interface FoodSuggestionsProps {
+  analysis?: CravingAnalysis;
 }
 
 const mockSuggestions: FoodSuggestion[] = [
@@ -55,9 +60,64 @@ const mockSuggestions: FoodSuggestion[] = [
   }
 ];
 
-export const FoodSuggestions = () => {
+export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const getImageForDish = (dishName: string): string => {
+    const lowerName = dishName.toLowerCase();
+    
+    // Map dishes to appropriate Unsplash images
+    if (lowerName.includes('curry')) {
+      return "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('chicken') || lowerName.includes('butter')) {
+      return "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('noodles') || lowerName.includes('ramen') || lowerName.includes('pasta')) {
+      return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('pizza')) {
+      return "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('soup')) {
+      return "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('rice') || lowerName.includes('biryani')) {
+      return "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('salad')) {
+      return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('burger')) {
+      return "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('taco')) {
+      return "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop";
+    } else {
+      // Default food images
+      const defaultImages = [
+        "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop",
+        "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=400&h=300&fit=crop"
+      ];
+      return defaultImages[Math.floor(Math.random() * defaultImages.length)];
+    }
+  };
+
+  const generateSuggestions = (): FoodSuggestion[] => {
+    if (analysis?.recommendations && analysis.recommendations.length > 0) {
+      return analysis.recommendations.map((rec, index) => ({
+        id: `ai-${index}`,
+        name: rec.name,
+        description: rec.description,
+        image: getImageForDish(rec.name),
+        type: rec.type,
+        cuisine: rec.cuisine,
+        rating: rec.type === "restaurant" ? (4.2 + Math.random() * 0.6) : undefined,
+        prepTime: rec.type === "recipe" ? `${15 + Math.floor(Math.random() * 45)} min` : undefined,
+        distance: rec.type === "restaurant" ? `${(0.3 + Math.random() * 2).toFixed(1)} mi` : undefined,
+        price: rec.type === "restaurant" ? (Math.random() > 0.5 ? "$$" : "$$$") : undefined,
+        matchReason: rec.matchReason
+      }));
+    }
+    
+    return mockSuggestions;
+  };
+
+  const suggestions = generateSuggestions();
 
   const handleSatisfied = () => {
     setFeedbackGiven(true);
@@ -93,7 +153,7 @@ export const FoodSuggestions = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mockSuggestions.map((suggestion) => (
+        {suggestions.map((suggestion) => (
           <Card key={suggestion.id} className="overflow-hidden hover:shadow-warm transition-all duration-300 group hover:scale-102">
             <div className="relative">
               <img 
