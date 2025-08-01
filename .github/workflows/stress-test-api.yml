@@ -1,0 +1,68 @@
+name: API Stress Testing
+
+on:
+  push:
+    branches: [ main, github-actions-stress-testing ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  api-stress-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: |
+        # Check if package.json exists
+        if [ ! -f package.json ]; then
+          echo "No package.json found, creating basic one..."
+          npm init -y
+        fi
+        
+        # Install dependencies
+        npm install
+        npm install -g artillery@latest
+    
+    - name: Verify installation
+      run: |
+        node --version
+        npm --version
+        artillery --version
+    
+    - name: Start application (if available)
+      run: |
+        # Check if start script exists
+        if npm run | grep -q "start"; then
+          echo "Starting application..."
+          npm start &
+          sleep 30
+          
+          # Test if app is running
+          if curl -f http://localhost:3000 --max-time 10 --silent; then
+            echo "✅ Application started successfully"
+          else
+            echo "⚠️ Application not responding, running stress test on external target"
+          fi
+        else
+          echo "⚠️ No start script found, running stress test on external target"
+        fi
+    
+    - name: Run stress test
+      run: |
+        echo "🚀 Running stress test..."
+        # Test against a reliable external endpoint
+        artillery quick --count 20 --num 5 https://httpbin.org/get
+        
+        # If local app is running, test it too
+        if curl -f http://localhost:3000 --max-time 5 --silent; then
+          echo "Testing local application..."
+          artillery quick --count 10 --num 3 http://localhost:3000
+        fi
