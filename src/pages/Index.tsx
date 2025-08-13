@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Hero } from "@/components/Hero";
 import { Navigation } from "@/components/Navigation";
 import { CravingInput, CravingAnalysis } from "@/components/CravingInput";
@@ -9,12 +9,20 @@ import { CravingHistory } from "@/components/CravingHistory";
 import { UserSidebar } from "@/components/UserSidebar";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState("discover");
   const [showHero, setShowHero] = useState(true);
   const [isUserSidebarOpen, setIsUserSidebarOpen] = useState(false);
   const [cravingAnalysis, setCravingAnalysis] = useState<CravingAnalysis | undefined>();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      window.location.href = '/auth';
+    }
+  }, [user, isLoading]);
 
   const handleViewChange = (view: string) => {
     setCurrentView(view);
@@ -69,6 +77,21 @@ const Index = () => {
         return null;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
