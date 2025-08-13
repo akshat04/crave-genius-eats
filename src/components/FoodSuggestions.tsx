@@ -165,16 +165,26 @@ export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
 
   const cleanDescription = (description: string): string => {
     // Remove markdown formatting like ** and other unwanted characters
-    return description.replace(/\*\*/g, '').replace(/\*/g, '').trim();
+    // Also handle HTML entities and special characters properly
+    return description
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .trim();
   };
 
   const generateSuggestions = (): FoodSuggestion[] => {
     if (analysis?.recommendations && analysis.recommendations.length > 0) {
       return analysis.recommendations.map((rec, index) => ({
         id: `ai-${index}`,
-        name: rec.name,
+        name: cleanDescription(rec.name),
         description: cleanDescription(rec.description),
-        image: getSpecificDishImage(rec.name),
+        image: getSpecificDishImage(cleanDescription(rec.name)),
         type: rec.type,
         cuisine: rec.cuisine,
         rating: rec.type === "restaurant" ? parseFloat((4.2 + Math.random() * 0.6).toFixed(2)) : undefined,
