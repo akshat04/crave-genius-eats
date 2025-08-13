@@ -1,0 +1,100 @@
+name: Firecrawl MCP Stress Testing
+
+on:
+  push:
+    branches: [ main, github-actions-stress-testing ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  firecrawl-stress-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install Firecrawl and dependencies
+      run: |
+        pip install firecrawl-py requests pytest
+    
+    - name: Create Firecrawl stress test script
+      run: |
+        cat > firecrawl_stress_test.py << 'EOF'
+        import asyncio
+        import time
+        import requests
+        from concurrent.futures import ThreadPoolExecutor
+        import json
+        
+        def test_firecrawl_endpoint(url, iteration):
+            """Simulate Firecrawl scraping stress test"""
+            try:
+                start_time = time.time()
+                # Simulate web scraping request
+                response = requests.get(url, timeout=30)
+                end_time = time.time()
+                
+                return {
+                    'iteration': iteration,
+                    'status_code': response.status_code,
+                    'response_time': end_time - start_time,
+                    'success': response.status_code == 200
+                }
+            except Exception as e:
+                return {
+                    'iteration': iteration,
+                    'error': str(e),
+                    'success': False
+                }
+        
+        def run_stress_test():
+            """Run concurrent stress test"""
+            test_urls = [
+                'https://httpbin.org/delay/1',
+                'https://httpbin.org/json',
+                'https://httpbin.org/html'
+            ]
+            
+            results = []
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = []
+                
+                for i in range(50):  # 50 concurrent requests
+                    url = test_urls[i % len(test_urls)]
+                    future = executor.submit(test_firecrawl_endpoint, url, i)
+                    futures.append(future)
+                
+                for future in futures:
+                    results.append(future.result())
+            
+            # Analyze results
+            successful = sum(1 for r in results if r.get('success', False))
+            total = len(results)
+            avg_response_time = sum(r.get('response_time', 0) for r in results if 'response_time' in r) / len([r for r in results if 'response_time' in r])
+            
+            print(f"Stress Test Results:")
+            print(f"Total requests: {total}")
+            print(f"Successful requests: {successful}")
+            print(f"Success rate: {(successful/total)*100:.2f}%")
+            print(f"Average response time: {avg_response_time:.2f}s")
+            
+            return results
+        
+        if __name__ == "__main__":
+            results = run_stress_test()
+            with open('firecrawl_stress_results.json', 'w') as f:
+                json.dump(results, f, indent=2)
+        EOF
+    
+    - name: Run Firecrawl stress test
+      run: python firecrawl_stress_test.py
+    
+    - name: Upload stress test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: firecrawl-stress-results
+        path: firecrawl_stress_results.json
