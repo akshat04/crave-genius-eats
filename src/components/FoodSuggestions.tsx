@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,12 +63,70 @@ const mockSuggestions: FoodSuggestion[] = [
 export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [suggestions, setSuggestions] = useState<FoodSuggestion[]>([]);
+
+  const getSpecificDishImage = (dishName: string): string => {
+    const lowerName = dishName.toLowerCase();
+    
+    // Enhanced mapping for specific Indian and international dishes
+    const dishImageMap: { [key: string]: string } = {
+      'chana masala': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop',
+      'chole': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop',
+      'butter chicken': 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop',
+      'murgh makhani': 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop',
+      'dal': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=300&fit=crop',
+      'daal': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=300&fit=crop',
+      'dal tadka': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=300&fit=crop',
+      'biryani': 'https://images.unsplash.com/photo-1563379091339-03246963d29c?w=400&h=300&fit=crop',
+      'palak paneer': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop',
+      'saag paneer': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop',
+      'rajma': 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&h=300&fit=crop',
+      'paneer makhani': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop',
+      'aloo gobi': 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400&h=300&fit=crop',
+      'samosa': 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&h=300&fit=crop',
+      'tandoori chicken': 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&h=300&fit=crop',
+      'naan': 'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=400&h=300&fit=crop',
+      'roti': 'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=400&h=300&fit=crop',
+      'chapati': 'https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=400&h=300&fit=crop',
+      'paneer curry': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop',
+      'chicken curry': 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop',
+      'vegetable curry': 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop',
+      'masala': 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop',
+      'korma': 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop',
+      'vindaloo': 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop',
+      'tikka masala': 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop',
+      'paneer tikka': 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop',
+      'chicken tikka': 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&h=300&fit=crop',
+      'pulao': 'https://images.unsplash.com/photo-1563379091339-03246963d29c?w=400&h=300&fit=crop',
+      'jeera rice': 'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&h=300&fit=crop',
+    };
+
+    // Check for exact matches first
+    for (const [dish, image] of Object.entries(dishImageMap)) {
+      if (lowerName.includes(dish)) {
+        return image;
+      }
+    }
+
+    // Fallback to existing generic mapping
+    return getImageForDish(dishName);
+  };
 
   const getImageForDish = (dishName: string): string => {
     const lowerName = dishName.toLowerCase();
     
     // Map dishes to appropriate Unsplash images with better matching
-    if (lowerName.includes('risotto')) {
+    if (lowerName.includes('chana masala') || lowerName.includes('chole')) {
+      return "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('butter chicken') || lowerName.includes('murgh makhani')) {
+      return "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('dal') || lowerName.includes('daal')) {
+      return "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('biryani')) {
+      return "https://images.unsplash.com/photo-1563379091339-03246963d29c?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('palak paneer') || lowerName.includes('saag')) {
+      return "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop";
+    } else if (lowerName.includes('risotto')) {
       return "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=300&fit=crop";
     } else if (lowerName.includes('curry')) {
       return "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop";
@@ -116,7 +174,7 @@ export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
         id: `ai-${index}`,
         name: rec.name,
         description: cleanDescription(rec.description),
-        image: getImageForDish(rec.name),
+        image: getSpecificDishImage(rec.name),
         type: rec.type,
         cuisine: rec.cuisine,
         rating: rec.type === "restaurant" ? parseFloat((4.2 + Math.random() * 0.6).toFixed(2)) : undefined,
@@ -130,7 +188,9 @@ export const FoodSuggestions = ({ analysis }: FoodSuggestionsProps) => {
     return mockSuggestions;
   };
 
-  const suggestions = generateSuggestions();
+  useEffect(() => {
+    setSuggestions(generateSuggestions());
+  }, [analysis]);
 
   const handleSatisfied = () => {
     setFeedbackGiven(true);
