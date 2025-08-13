@@ -345,19 +345,34 @@ export const MenuScanning = () => {
                 </>
               ) : isCameraMode ? (
                 <div className="space-y-4">
-                  <div className="relative">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-semibold mb-2">Live Camera Feed</h3>
+                    <p className="text-sm text-muted-foreground">Position the menu within the frame and tap capture</p>
+                  </div>
+                  <div className="relative bg-black rounded-lg overflow-hidden mx-auto" style={{ maxWidth: '600px', aspectRatio: '4/3' }}>
                     <video
                       ref={videoRef}
                       autoPlay
                       playsInline
-                      className="w-full max-w-md mx-auto rounded-lg"
+                      muted
+                      className="w-full h-full object-cover"
                     />
                     <canvas ref={canvasRef} className="hidden" />
+                    {/* Camera overlay guides */}
+                    <div className="absolute inset-4 border-2 border-white/50 rounded-lg pointer-events-none">
+                      <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-white rounded-tl"></div>
+                      <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-white rounded-tr"></div>
+                      <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-white rounded-bl"></div>
+                      <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-white rounded-br"></div>
+                    </div>
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/80 text-sm bg-black/30 px-3 py-1 rounded">
+                      Align menu within guides
+                    </div>
                   </div>
                   <div className="flex gap-4 justify-center">
-                    <Button variant="hero" onClick={captureImage}>
-                      <Camera className="w-4 h-4" />
-                      Capture
+                    <Button variant="hero" onClick={captureImage} size="lg">
+                      <Camera className="w-5 h-5" />
+                      Capture Photo
                     </Button>
                     <Button variant="outline" onClick={stopCamera}>
                       <X className="w-4 h-4" />
@@ -367,19 +382,24 @@ export const MenuScanning = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="relative">
+                  <div className="text-center mb-4">
+                    <h3 className="text-lg font-semibold mb-2">📸 Captured Photo</h3>
+                    <p className="text-sm text-muted-foreground">Great shot! Your menu is ready for AI analysis</p>
+                  </div>
+                  <div className="relative bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <img 
                       src={uploadedImage} 
                       alt="Captured menu"
-                      className="max-w-full h-64 object-contain mx-auto rounded-lg shadow-card"
+                      className="max-w-full h-80 object-contain mx-auto rounded-lg shadow-card border border-border"
                     />
                     <Button
                       variant="outline"
                       size="sm"
-                      className="absolute top-2 right-2"
+                      className="absolute top-6 right-6 bg-background/90 hover:bg-background"
                       onClick={resetAnalysis}
                     >
                       <X className="w-4 h-4" />
+                      Retake
                     </Button>
                   </div>
                   
